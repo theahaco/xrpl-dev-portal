@@ -34,7 +34,7 @@ showcase_icon: assets/img/logos/typescript.svg
 
 # Get Started Using TypeScript Library
 
-This tutorial guides you through the basics of building an XRP Ledger-connected application in TypeScript using the [`xrpl.js`](https://github.com/XRPLF/xrpl.js/) client library in either Node.js or web browsers. Because `xrpl.js` ships its own type definitions, you get compile-time checking of your requests and transactions with no extra setup.
+This tutorial guides you through the basics of building an XRP Ledger-connected application in TypeScript using the [`xrpl.js`](https://github.com/XRPLF/xrpl.js/) client library in either Node.js or web browsers. The downloadable example pins `xrpl` 5.3.0 and uses strict TypeScript. Let the editor guide request fields, transaction fields, and inferred response properties; use runtime checks for network results.
 
 ## Goals
 
@@ -53,7 +53,7 @@ In this tutorial, you'll learn:
 To complete this tutorial, you should meet the following guidelines:
 
 - Have some familiarity with writing code in TypeScript.
-- Have installed Node.js **version 20** or later in your development environment.
+- Have installed Node.js **version 22** or later in your development environment.
 - If you want to build a web application, any modern web browser with JavaScript support should work fine.
 
 You don't need to install the TypeScript compiler globally; the steps below add it as a project dependency.
@@ -77,7 +77,7 @@ For a web app, you load `xrpl.js` at runtime and use the TypeScript compiler as 
 To get the type definitions and the compiler, install `xrpl` and `typescript` with [NPM](https://www.npmjs.com/):
 
 ```sh
-npm install xrpl
+npm install xrpl@5.3.0
 npm install --save-dev typescript
 ```
 {% /step %}
@@ -86,10 +86,10 @@ npm install --save-dev typescript
 {% step id="import-node-tag" when={ "environment": "Node" } %}
 ### 1. Install Dependencies
 
-Start a new project by creating an empty folder, then move into that folder and use [NPM](https://www.npmjs.com/) to install the latest version of `xrpl.js` along with the TypeScript compiler and the Node.js type definitions:
+Start a new project by creating an empty folder, then move into that folder and use [NPM](https://www.npmjs.com/) to install the version of `xrpl.js` used by this example along with the TypeScript compiler and the Node.js type definitions:
 
 ```sh
-npm install xrpl
+npm install xrpl@5.3.0
 npm install --save-dev typescript @types/node
 ```
 
@@ -149,7 +149,7 @@ The sample code shows you how to connect to the Testnet, which is one of the ava
 {% step id="get-account-create-wallet-tag" %}
 #### Create and Fund a Wallet
 
-The `xrpl.js` library has a [`Wallet`](https://js.xrpl.org/classes/Wallet.html) class for handling the keys and address of an XRP Ledger account. On Testnet, you can fund a new account as shown in the example. Annotating the result with the `Wallet` type lets the compiler check every property you access.
+The `xrpl.js` library has a [`Wallet`](https://js.xrpl.org/classes/Wallet.html) class for handling the keys and address of an XRP Ledger account. On Testnet, you can fund a new account as shown in the example. The returned wallet already has the `Wallet` type: no annotation is needed. Type `testWallet.` to discover its properties and methods in your editor.
 {% /step %}
 
 {% step id="get-account-create-wallet-b-tag" %}
@@ -167,178 +167,61 @@ To use an existing wallet seed encoded in [base58][], you can create a [`Wallet`
 {% step id="query-xrpl-tag" %}
 ### 5. Query the XRP Ledger
 
-Use the Client's [`request()`](https://js.xrpl.org/classes/Client.html#request) method to access the XRP Ledger's [WebSocket API](../../references/http-websocket-apis/api-conventions/request-formatting.md). Typing the request as an `AccountInfoRequest` verifies the command name and its fields, and the library infers the matching `AccountInfoResponse` for the result so you get autocomplete on the response too.
+Use the Client's [`request()`](https://js.xrpl.org/classes/Client.html#request) method to access the XRP Ledger's [WebSocket API](../../references/http-websocket-apis/api-conventions/request-formatting.md). Use `satisfies AccountInfoRequest` to check the request while preserving its literal command. The library infers `AccountInfoResponse` from that command. Type `response.result.account_data.` to discover the available account fields without importing a response type.
 {% /step %}
 
 {% step id="build-tx-tag" %}
 ### 6. Build and Validate a Transaction
 
-One of the biggest advantages of TypeScript is turning your own input into a well-formed transaction. Typing an object as a [`Payment`](../../references/protocol/transactions/types/payment.md) makes the compiler require every field and reject values of the wrong type _before_ you run the code. The [`xrpToDrops()`](https://js.xrpl.org/functions/xrpToDrops.html) helper converts an XRP amount into the drops string the ledger expects, and [`validate()`](https://js.xrpl.org/functions/validate.html) runs the same structural checks the server does at runtime.
+Use `satisfies Payment` to receive field completion and check required fields and known field types in an object literal. The published 5.3.0 transaction model still accepts additional field names, so this alone does not reject every typo. It preserves the literal transaction kind and keeps the value compatible with `validate()` without an assertion. [`xrpToDrops()`](https://js.xrpl.org/functions/xrpToDrops.html) converts XRP to drops. [`validate()`](https://js.xrpl.org/functions/validate.html) checks supported local constraints; it cannot determine ledger state or guarantee that a transaction will succeed.
 
-This example then signs and submits the transaction in one call with [`submitAndWait()`](https://js.xrpl.org/classes/Client.html#submitAndWait), which waits for the network to validate it and returns the result. Before submitting real transactions, read [Set up Secure Signing](../../concepts/transactions/secure-signing.md).
+This example then signs and submits the transaction in one call with [`submitAndWait()`](https://js.xrpl.org/classes/Client.html#submitAndWait), which waits for validated inclusion and returns the result. The example uses a second freshly funded wallet as the destination and checks `TransactionResult` before reporting success. A validated transaction can still have failed. Before submitting real transactions, read [Set up Secure Signing](../../concepts/transactions/secure-signing.md).
 {% /step %}
 
 {% step id="listen-for-events-tag" %}
 ### 7. Listen for Events
 
-You can set up handlers for various types of events in `xrpl.js`, such as whenever the XRP Ledger's [consensus process](../../concepts/consensus-protocol/index.md) produces a new [ledger version](../../concepts/ledgers/index.md). To do that, first call the [subscribe method][] to get the type of events you want, then attach an event handler using the [`on(eventType, callback)`](https://js.xrpl.org/classes/Client.html#on) method of the client. The callback's `ledger` argument is typed for you, so fields like `ledger_index` and `txn_count` are checked as you use them.
+You can set up handlers for various types of events in `xrpl.js`, such as whenever the XRP Ledger's [consensus process](../../concepts/consensus-protocol/index.md) produces a new [ledger version](../../concepts/ledgers/index.md). To do that, first attach an event handler using the [`on(eventType, callback)`](https://js.xrpl.org/classes/Client.html#on) method of the client, then await the [subscribe method][] so subscription errors are handled. The callback's `ledger` argument is typed for you, so fields like `ledger_index` and `txn_count` are checked as you use them.
 {% /step %}
 
 {% step id="disconnect-node-tag" when={ "environment": "Node" } %}
 ### 8. Disconnect
 
-Call the [`disconnect()`](https://js.xrpl.org/classes/Client.html#disconnect) function so Node.js can end the process. The example code waits 10 seconds before disconnecting to allow time for the ledger event listener to receive and display events.
+Call the [`disconnect()`](https://js.xrpl.org/classes/Client.html#disconnect) function so Node.js can end the process. The example listens for ten seconds on its successful path. A `finally` block disconnects even when a request or transaction fails.
 {% /step %}
 
 {% step id="disconnect-web-tag" when={ "environment": "Web" } %}
 ### 8. Disconnect
 
-Call the [`disconnect()`](https://js.xrpl.org/classes/Client.html#disconnect) function to disconnect from the ledger when done. The example code waits 10 seconds before disconnecting to allow time for the ledger event listener to receive and display events.
+Call the [`disconnect()`](https://js.xrpl.org/classes/Client.html#disconnect) function to disconnect from the ledger when done. The example listens for ten seconds on its successful path. A `finally` block disconnects even when a request or transaction fails.
 {% /step %}
 
 {% step id="run-app-node-tag" when={ "environment": "Node" } %}
 ### 9. Compile and Run the Application
 
-Finally, in your terminal, compile the TypeScript to JavaScript and run the result:
+From the downloaded example directory:
 
 ```sh
-npx tsc
-node dist/get-acct-info.js
+npm install
+npm run typecheck
+npm start
 ```
 
-{% admonition type="info" name="Note" %}TypeScript is compiled, not run directly. Whenever you change a `.ts` file, re-run `npx tsc` to recompile before running the app again.{% /admonition %}
-
-You should see output similar to the following:
-
-```sh
-Connected to Testnet
-
-Creating a new wallet and funding it with Testnet XRP...
-Wallet: rKTfqsMZTPWNYWrzFjUwDNLa8XTeA45wvB
-Balance: 100
-Account Testnet Explorer URL:
-  https://testnet.xrpl.org/accounts/rKTfqsMZTPWNYWrzFjUwDNLa8XTeA45wvB
-
-Getting account info...
-{
-  "api_version": 2,
-  "id": 4,
-  "result": {
-    "account_data": {
-      "Account": "rKTfqsMZTPWNYWrzFjUwDNLa8XTeA45wvB",
-      "Balance": "100000000",
-      "Flags": 0,
-      "LedgerEntryType": "AccountRoot",
-      "OwnerCount": 0,
-      "PreviousTxnID": "C791975AB1FA811DD7C2A958F71629C3EB830545B25C11F488249D0AEADAA04C",
-      "PreviousTxnLgrSeq": 18910118,
-      "Sequence": 18910118,
-      "index": "0553BF36D48179C15297E1087002B6D33E076D71CAFEA7F0BB1362B9502C851D"
-    },
-    "ledger_hash": "CC057AE6CF43485107EA0E4184DE48D73DC4C8A742577964462AB49EDA8EC84E",
-    "ledger_index": 18910118,
-    "validated": true
-  },
-  "type": "response"
-}
-
-Built and validated a Payment transaction:
-{
-  "TransactionType": "Payment",
-  "Account": "rKTfqsMZTPWNYWrzFjUwDNLa8XTeA45wvB",
-  "Amount": "22000000",
-  "Destination": "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
-}
-
-Submitted the transaction:
-{
-  "hash": "84AF8035CD41B0E411968FC9BDD52254C662197DB2BE669640F6DF25D79A7E0A",
-  "ledger_index": 19257811,
-  "meta": {
-    "TransactionResult": "tesSUCCESS",
-    "delivered_amount": "22000000"
-  },
-  "validated": true
-}
-
-Listening for ledger close events...
-Ledger #18910119 validated with 0 transactions!
-Ledger #18910120 validated with 1 transactions!
-Ledger #18910121 validated with 1 transactions!
-
-Disconnected
-```
+The script prints an account sequence, a confirmed transaction hash, and ledger events. A failure produces an error and a nonzero exit status. It requires a reachable Testnet server and faucet, and each run funds fresh accounts.
 {% /step %}
 
 {% step id="run-app-web-tag" when={ "environment": "Web" } %}
 ### 9. Compile and Run the Application
 
-Compile the TypeScript to JavaScript, then open the `index.html` file in a web browser:
+Compile, then serve the directory over HTTP so browser module imports work:
 
 ```sh
-npx tsc
+npm install
+npm run build
+python3 -m http.server 8000
 ```
 
-{% admonition type="info" name="Note" %}TypeScript is compiled, not run directly. Whenever you change a `.ts` file, re-run `npx tsc` to recompile before reloading the page.{% /admonition %}
-
-You should see output similar to the following:
-
-```text
-Connected to Testnet
-Creating a new wallet and funding it with Testnet XRP...
-Wallet: rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S
-Balance: 100
-View account on XRPL Testnet Explorer: rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S
-
-Getting account info...
-{
-  "api_version": 2,
-  "id": 5,
-  "result": {
-    "account_data": {
-      "Account": "rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S",
-      "Balance": "100000000",
-      "Flags": 0,
-      "LedgerEntryType": "AccountRoot",
-      "OwnerCount": 0,
-      "PreviousTxnID": "96E4B44F93EC0399B7ADD75489630C6A8DCFC922F20F6810D25490CC0D3AA12E",
-      "PreviousTxnLgrSeq": 9949610,
-      "Sequence": 9949610,
-      "index": "B5D2865DD4BF8EEDFEE2FD95DE37FC28D624548E9BBC42F9FBF61B618E98FAC8"
-    },
-    "ledger_hash": "7692673B8091899C3EEE6807F66B65851D3563F483A49A5F03A83608658473D6",
-    "ledger_index": 9949610,
-    "validated": true
-  },
-  "type": "response"
-}
-
-Built and validated a Payment transaction:
-{
-  "TransactionType": "Payment",
-  "Account": "rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S",
-  "Amount": "22000000",
-  "Destination": "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
-}
-
-Submitted the transaction:
-{
-  "hash": "84AF8035CD41B0E411968FC9BDD52254C662197DB2BE669640F6DF25D79A7E0A",
-  "ledger_index": 19257811,
-  "meta": {
-    "TransactionResult": "tesSUCCESS",
-    "delivered_amount": "22000000"
-  },
-  "validated": true
-}
-
-Listening for ledger close events...
-Ledger #9949611 validated with 0 transactions
-Ledger #9949612 validated with 1 transactions
-Ledger #9949613 validated with 0 transactions
-
-Disconnected
-```
+Open `http://localhost:8000/index.html`. The import map pins the same xrpl version used during compilation. Rebuild after changing the TypeScript files. The page displays account, payment, and ledger-event results, or the error that stopped the run.
 {% /step %}
 
 ## See Also

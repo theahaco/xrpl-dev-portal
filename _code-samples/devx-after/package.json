@@ -1,0 +1,21 @@
+{
+  "name": "aha-xrpl-devx-after-prototypes",
+  "private": true,
+  "type": "module",
+  "description": "Unreleased SDK ergonomics demonstrations; requires sibling aha SDK fork",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "get-started": "npm run build && node dist/get-started.js",
+    "send-xrp": "npm run build && node dist/send-xrp.js",
+    "issue-mpt": "npm run build && node dist/issue-mpt-with-metadata.js",
+    "create-amm": "npm run build && node dist/create-amm.js"
+  },
+  "dependencies": {
+    "xrpl": "file:../../../xrpl.js/packages/xrpl"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "^22.0.0"
+  }
+}

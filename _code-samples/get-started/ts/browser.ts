@@ -1,103 +1,86 @@
 // @chunk {"steps": ["import-web-tag"]}
-// Import the library along with the TypeScript types you use below. The import
-// map in index.html resolves 'xrpl' to a browser build at runtime.
-import {
-  Client,
-  Wallet,
-  Payment,
-  AccountInfoRequest,
-  AccountInfoResponse,
-  xrpToDrops,
-  validate
-} from 'xrpl'
-
-const output = document.getElementById('output') as HTMLElement
+// Runtime functions and type-only imports appear separately in the editor.
+import { Client, Wallet, xrpToDrops, validate } from 'xrpl'
+import type { AccountInfoRequest, Payment } from 'xrpl'
 // @chunk-end
 
-// @chunk {"steps": ["connect-tag"]}
-// Define the network client. The Client type is inferred from the constructor.
-const SERVER_URL = 'wss://s.altnet.rippletest.net:51233/'
-const client = new Client(SERVER_URL)
-await client.connect()
-output.innerHTML = '<p>Connected to Testnet</p>'
-// @chunk-end
-
-// @chunk {"steps": ["get-account-create-wallet-tag"]}
-// Create a wallet and fund it with the Testnet faucet.
-output.innerHTML += '<p>Creating a new wallet and funding it with Testnet XRP...</p>'
-const fundResult = await client.fundWallet()
-// Annotating with the Wallet type lets TypeScript check every field you touch.
-const testWallet: Wallet = fundResult.wallet
-output.innerHTML += `<p>Wallet: ${testWallet.address}</p>`
-output.innerHTML += `<p>Balance: ${fundResult.balance}</p>`
-output.innerHTML += `<p>View account on XRPL Testnet Explorer: <a href="https://testnet.xrpl.org/accounts/${testWallet.address}" target="_blank">${testWallet.address}</a></p>`
-// @chunk-end
-
-// To generate a wallet without funding it, uncomment the code below.
-// @chunk {"steps": ["get-account-create-wallet-b-tag"]}
-// const testWallet: Wallet = Wallet.generate()
-// @chunk-end
-
-// To provide your own seed, replace the testWallet value with the below.
-// @chunk {"steps": ["get-account-create-wallet-c-tag"]}
-// const testWallet: Wallet = Wallet.fromSeed('your-seed-key')
-// @chunk-end
-
-// @chunk {"steps": ["query-xrpl-tag"]}
-// Build the request as an AccountInfoRequest. TypeScript verifies the command
-// name and fields, and infers the matching AccountInfoResponse for the result.
-output.innerHTML += '<p>Getting account info...</p>'
-const request: AccountInfoRequest = {
-  command: 'account_info',
-  account: testWallet.address,
-  ledger_index: 'validated'
-}
-const response: AccountInfoResponse = await client.request(request)
-output.innerHTML += `<pre>${JSON.stringify(response, null, 2)}</pre>`
-// @chunk-end
-
-// @chunk {"steps": ["build-tx-tag"]}
-// Turn your own input values into a valid transaction. Typing the object as a
-// Payment makes the compiler require every field and reject the wrong ones.
-const xrpToSend = 22 // a value you might read from user input
-const payment: Payment = {
-  TransactionType: 'Payment',
-  Account: testWallet.address,
-  // xrpToDrops converts the XRP amount into the drops string the ledger expects.
-  Amount: xrpToDrops(xrpToSend),
-  Destination: 'rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe' // example destination
+const output = document.getElementById('output')
+if (output == null) throw new Error('Missing output element')
+const log = (message: string) => {
+  const line = document.createElement('p')
+  line.textContent = message
+  output.append(line)
 }
 
-// validate() runs the same structural checks the server does, at runtime. It
-// takes a generic transaction object, so pass the typed value through to it.
-validate(payment as unknown as Record<string, unknown>)
-output.innerHTML += '<p>Built and validated a Payment transaction:</p>'
-output.innerHTML += `<pre>${JSON.stringify(payment, null, 2)}</pre>`
+const client = new Client('wss://s.altnet.rippletest.net:51233/')
+try {
+  // @chunk {"steps": ["connect-tag"]}
+  await client.connect()
+  log('Connected to Testnet')
+  // @chunk-end
 
-// Sign and submit the transaction in one call, then show the result.
-const submitResponse = await client.submitAndWait(payment, { wallet: testWallet })
-output.innerHTML += '<p>Submitted the transaction:</p>'
-output.innerHTML += `<pre>${JSON.stringify(submitResponse.result, null, 2)}</pre>`
-// @chunk-end
+  // @chunk {"steps": ["get-account-create-wallet-tag"]}
+  // fundWallet() already infers Wallet: hover or type testWallet. to explore it.
+  const { wallet: testWallet } = await client.fundWallet()
+  log(`Wallet: ${testWallet.address}`)
+  // @chunk-end
 
-// @chunk {"steps": ["listen-for-events-tag"]}
-// Listen to ledger close events. The ledger argument is typed for you, so
-// ledger.ledger_index and ledger.txn_count are checked at compile time.
-output.innerHTML += '<p>Listening for ledger close events...</p>'
-client.request({
-  command: 'subscribe',
-  streams: ['ledger']
-})
-client.on('ledgerClosed', (ledger) => {
-  output.innerHTML += `<p>Ledger #${ledger.ledger_index} validated with ${ledger.txn_count} transactions</p>`
-})
-// @chunk-end
+  // @chunk {"steps": ["get-account-create-wallet-b-tag"]}
+  // const testWallet = Wallet.generate()
+  // @chunk-end
+  // @chunk {"steps": ["get-account-create-wallet-c-tag"]}
+  // const testWallet = Wallet.fromSeed('your-seed-key')
+  // @chunk-end
 
-// @chunk {"steps": ["disconnect-web-tag"]}
-// Disconnect from the ledger when done. Delay this by 10 seconds to give the
-// ledger event listener time to receive and display some ledger events.
-setTimeout(async () => {
+  // @chunk {"steps": ["query-xrpl-tag"]}
+  // `satisfies` checks fields while preserving command: 'account_info'.
+  const request = {
+    command: 'account_info',
+    account: testWallet.address,
+    ledger_index: 'validated'
+  } satisfies AccountInfoRequest
+  // No response annotation: the command selects AccountInfoResponse for you.
+  const response = await client.request(request)
+  log(`Account sequence: ${response.result.account_data.Sequence}`)
+  // @chunk-end
+
+  // @chunk {"steps": ["build-tx-tag"]}
+  // Use our own funded destination rather than an external example address.
+  const { wallet: destination } = await client.fundWallet()
+  const payment = {
+    TransactionType: 'Payment',
+    Account: testWallet.address,
+    Amount: xrpToDrops('1'),
+    Destination: destination.address
+  } satisfies Payment
+
+  // Checks supported local constraints; ledger state still determines success.
+  // `satisfies` keeps the object compatible with validate(), without a cast.
+  validate(payment)
+  const submitted = await client.submitAndWait(payment, { wallet: testWallet })
+  // A validated transaction can still fail. Check its result before continuing.
+  const metadata = submitted.result.meta
+  if (metadata == null || typeof metadata === 'string') {
+    throw new Error('Expected parsed transaction metadata')
+  }
+  if (metadata.TransactionResult !== 'tesSUCCESS') {
+    throw new Error(`Payment failed: ${metadata.TransactionResult}`)
+  }
+  log(`Payment confirmed: ${submitted.result.hash}`)
+  // @chunk-end
+
+  // @chunk {"steps": ["listen-for-events-tag"]}
+  // Register before subscribing; await the subscription so errors propagate.
+  client.on('ledgerClosed', (ledger) => {
+    log(`Ledger #${ledger.ledger_index}: ${ledger.txn_count} transactions`)
+  })
+  await client.request({ command: 'subscribe', streams: ['ledger'] })
+  await new Promise<void>((resolve) => setTimeout(resolve, 10_000))
+  // @chunk-end
+} catch (error) {
+  log(error instanceof Error ? error.message : String(error))
+} finally {
+  // @chunk {"steps": ["disconnect-web-tag"]}
   await client.disconnect()
-  output.innerHTML += '<p>Disconnected</p>'
-}, 10000)
-// @chunk-end
+  // @chunk-end
+}

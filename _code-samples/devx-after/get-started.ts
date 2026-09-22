@@ -1,3 +1,4 @@
+// PROTOTYPE: requires the built aha DevX SDK fork; not published xrpl 5.3.0.
 import { pathToFileURL } from 'node:url'
 // @chunk {"steps": ["import-node-tag"]}
 // Runtime functions and type-only imports appear separately in the editor.
@@ -39,10 +40,8 @@ export async function run(
   validate(payment)
   const submitted = await client.submitAndWait(payment, { wallet: testWallet })
   // A validated transaction can still fail. Check its result before continuing.
+  // The SDK guarantees parsed metadata after validated inclusion.
   const metadata = submitted.result.meta
-  if (metadata == null || typeof metadata === 'string') {
-    throw new Error('Expected parsed transaction metadata')
-  }
   if (metadata.TransactionResult !== 'tesSUCCESS') {
     throw new Error(`Payment failed: ${metadata.TransactionResult}`)
   }
