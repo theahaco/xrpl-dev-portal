@@ -1,6 +1,6 @@
 # Unreleased DevX SDK comparison
 
-These four workflows demonstrate the **proposed aha SDK changes**. They require the built aha fork in a sibling `xrpl.js` checkout. They are not examples of features released in npm `xrpl` 5.3.0. The ordinary sample directories retain the runnable 5.3.0 versions.
+These four workflows demonstrate the **proposed aha SDK changes**. They require the built aha fork in a sibling `xrpl.js` checkout. They are not examples of features released in npm `xrpl` 5.3.0. Getting Started now presents the proposed experience by default; its published 5.3.0 comparison lives in `devx-before/get-started`. The other ordinary sample directories retain their runnable 5.3.0 versions.
 
 ## Prerequisite and setup
 
@@ -34,7 +34,7 @@ Each command uses fresh faucet-funded accounts; Get Started/Send XRP use Testnet
 
 | Journey | Current-release source | Proposed behavior |
 |---|---|---|
-| Get Started | `../get-started/ts/get-acct-info.ts` | `submitAndWait` returns parsed metadata after validated inclusion. |
+| Get Started | `../devx-before/get-started/get-acct-info.ts` | Inline discriminants guide fields and inference; `submitAndWait` guarantees parsed metadata. |
 | Send XRP | `../send-xrp/ts/send-xrp.ts` | `autofill(payment)` exposes populated fields without a generic; the signed blob preserves Payment into the response. |
 | MPT | `../issue-mpt-with-metadata/ts/issue-mpt-with-metadata.ts` | The MPT selector narrows the ledger-entry type; parsed metadata is guaranteed after validated inclusion. |
 | AMM | `../create-amm/ts/create-amm-guided.ts` | A `ValidatedTxResponse` helper accesses parsed metadata directly and still checks each transaction result. |

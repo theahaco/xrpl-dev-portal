@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Send your first test XRP</title>
+    <title>xrpl.js TypeScript Base Example</title>
     <!-- @chunk {"steps": ["import-web-tag"]} -->
-    <script src="./node_modules/xrpl/build/xrpl-latest-min.js"></script>
+    <!-- The import map resolves the bare 'xrpl' specifier used in browser.ts
+         to a browser-ready ES module build served from a CDN. -->
     <script type="importmap">
-      { "imports": { "xrpl": "./xrpl-browser.js" } }
+      { "imports": { "xrpl": "https://esm.sh/xrpl@5.3.0" } }
     </script>
     <!-- Load the compiled output of browser.ts (created by `npx tsc`). -->
     <script type="module" src="./dist/browser.js"></script>
     <!-- @chunk-end -->
   </head>
   <body>
-    <h1>Send your first test XRP</h1>
+    <h1>xrpl.js TypeScript Get Started</h1>
     <div id="output"></div>
   </body>
 </html>

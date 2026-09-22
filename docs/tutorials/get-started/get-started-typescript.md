@@ -1,6 +1,6 @@
 ---
 seo:
-    description: Build an entry-level TypeScript application for querying the XRP Ledger.
+    description: Send your first test XRP and explore the ledger with TypeScript.
 top_nav_name: TypeScript
 top_nav_grouping: Get Started
 labels:
@@ -17,7 +17,7 @@ showcase_icon: assets/img/logos/typescript.svg
     },
     {
       "files": ["/_code-samples/get-started/ts/browser.ts"],
-      "downloadAssociatedFiles": ["/_code-samples/get-started/ts/index.html", "/_code-samples/get-started/ts/browser.ts", "/_code-samples/get-started/ts/package.json", "/_code-samples/get-started/ts/tsconfig.json", "/_code-samples/get-started/ts/README.md"],
+      "downloadAssociatedFiles": ["/_code-samples/get-started/ts/index.html", "/_code-samples/get-started/ts/xrpl-browser.js", "/_code-samples/get-started/ts/browser.ts", "/_code-samples/get-started/ts/package.json", "/_code-samples/get-started/ts/tsconfig.json", "/_code-samples/get-started/ts/README.md"],
       "when": { "environment": "Web" }
     }
   ]
@@ -32,72 +32,50 @@ showcase_icon: assets/img/logos/typescript.svg
   }
 %}
 
-# Get Started Using TypeScript Library
+# Send Your First Test XRP with TypeScript
 
-This tutorial guides you through the basics of building an XRP Ledger-connected application in TypeScript using the [`xrpl.js`](https://github.com/XRPLF/xrpl.js/) client library in either Node.js or web browsers. The downloadable example pins `xrpl` 5.3.0 and uses strict TypeScript. Let the editor guide request fields, transaction fields, and inferred response properties; use runtime checks for network results.
+Create two test wallets, send a payment, and watch the ledger confirm it. Along the way, your editor will guide the fields you can send and the data you get back.
 
-## Goals
+{% admonition type="info" name="aha SDK preview" %}
+This walkthrough demonstrates the proposed SDK experience on aha's `aha/devx-audit-2026-09` branches. It uses the unreleased local SDK build. The [published 5.3.0 comparison](https://github.com/theahaco/xrpl-dev-portal/tree/aha/devx-audit-2026-09/_code-samples/devx-before/get-started) is available separately.
+{% /admonition %}
 
-In this tutorial, you'll learn:
+## Before You Start
 
-- The basic building blocks of XRP Ledger-based applications.
-- How to set up a TypeScript project that compiles and runs against the XRP Ledger.
-- How to connect to the XRP Ledger using `xrpl.js`.
-- How to get an account on the [Testnet](/resources/dev-tools/xrp-faucets) using `xrpl.js`.
-- How to use the `xrpl.js` library to look up information about an account on the XRP Ledger.
-- How to use the library's built-in types to build and validate a transaction from your own input values.
-- How to put these steps together to create a TypeScript app or web-app.
+You need Node.js 22 or later and basic TypeScript familiarity. Select **Node** or **Web** above. Both examples use Testnet and create fresh wallets; test XRP has no monetary value.
 
-## Prerequisites
+For this preview, check out the `aha/devx-audit-2026-09` branch in [xrpl.js](https://github.com/theahaco/xrpl.js/tree/aha/devx-audit-2026-09) and [xrpl-dev-portal](https://github.com/theahaco/xrpl-dev-portal/tree/aha/devx-audit-2026-09) as sibling directories. Build the SDK using its repository setup instructions, including its workspace dependencies, then work in `xrpl-dev-portal/_code-samples/get-started/ts`.
 
-To complete this tutorial, you should meet the following guidelines:
+The source panel follows each step. Click **Download** to save the example files.
 
-- Have some familiarity with writing code in TypeScript.
-- Have installed Node.js **version 22** or later in your development environment.
-- If you want to build a web application, any modern web browser with JavaScript support should work fine.
-
-You don't need to install the TypeScript compiler globally; the steps below add it as a project dependency.
-
-## Source Code
-
-Click **Download** on the top right of the code preview panel to download the source code.
-
-## Steps
-
-Follow the steps to create a simple application with `xrpl.js` and TypeScript.
+## Try It
 
 <!-- Web steps -->
 {% step id="import-web-tag" when={ "environment": "Web" } %}
 ### 1. Install Dependencies
 
-For a web app, you load `xrpl.js` at runtime and use the TypeScript compiler as a build tool. Create an `index.html` file that loads the library through an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) and runs your compiled script:
-
-{% code-snippet file="/_code-samples/get-started/ts/index.html" language="html" /%}
-
-To get the type definitions and the compiler, install `xrpl` and `typescript` with [NPM](https://www.npmjs.com/):
+Install the example dependencies, then import the SDK functions shown in the source panel:
 
 ```sh
-npm install xrpl@5.3.0
-npm install --save-dev typescript
+npm install
 ```
+
+The included HTML loads your local prototype browser bundle and runs the compiled TypeScript. Its import map uses the same SDK build as the compiler.
+
+{% code-snippet file="/_code-samples/get-started/ts/index.html" language="html" /%}
 {% /step %}
 
 <!-- Node.js steps -->
 {% step id="import-node-tag" when={ "environment": "Node" } %}
 ### 1. Install Dependencies
 
-Start a new project by creating an empty folder, then move into that folder and use [NPM](https://www.npmjs.com/) to install the version of `xrpl.js` used by this example along with the TypeScript compiler and the Node.js type definitions:
+Install the example's SDK dependency and TypeScript compiler:
 
 ```sh
-npm install xrpl@5.3.0
-npm install --save-dev typescript @types/node
+npm install
 ```
 
-This updates your `package.json` file, or creates a new one if it didn't already exist.
-
-Your `package.json` file should look something like this:
-
-{% code-snippet file="/_code-samples/get-started/ts/package.json" language="json" /%}
+Import `Client` and `xrpToDrops` as shown in the source panel. The supplied package points to the sibling SDK checkout for this preview.
 {% /step %}
 
 {% step id="configure-ts-tag" %}
@@ -108,80 +86,40 @@ Add a `tsconfig.json` file to tell the compiler how to build your project. The s
 {% code-snippet file="/_code-samples/get-started/ts/tsconfig.json" language="json" /%}
 {% /step %}
 
-### 3. Connect to the XRP Ledger
-
 {% step id="connect-tag" %}
-#### Connect to the XRP Ledger Testnet
+### 3. Connect to Testnet
 
-To make queries and submit transactions, you need to connect to the XRP Ledger. To do this with `xrpl.js`, you create an instance of the [`Client`](https://js.xrpl.org/classes/Client.html) class and use the [`connect()`](https://js.xrpl.org/classes/Client.html#connect) method. Because you import the class directly, TypeScript infers the correct type for your `client`.
-
-{% admonition type="success" name="Tip" %}Many network functions in `xrpl.js` use [Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) to return values asynchronously. The code samples here use the [`async/await` pattern](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Async_await) to wait for the actual result of the Promises.{% /admonition %}
-
-The sample code shows you how to connect to the Testnet, which is one of the available [parallel networks](../../concepts/networks-and-servers/parallel-networks.md).
+Create a `Client` and call `connect()`. Use `await` to wait for the connection before querying or sending a payment. The example closes the connection in `finally`, including when an operation fails.
 {% /step %}
-
-{% step id="connect-mainnet-tag"%}
-#### Connect to the XRP Ledger Mainnet
-
- When you're ready to move to production, you'll need to connect to the XRP Ledger Mainnet. You can do that in two ways:
-
-- By [installing the core server](../../infrastructure/installation/index.md) (`xrpld`) and running a node yourself. The core server connects to the Mainnet by default, but you can [change the configuration to use Testnet or Devnet](../../infrastructure/configuration/connect-your-xrpld-to-the-xrp-test-net.md). [There are good reasons to run your own core server](../../concepts/networks-and-servers/index.md#reasons-to-run-your-own-server). If you run your own server, you can connect to it like so:
-
-    ```typescript
-    const MY_SERVER = 'ws://localhost:6006/'
-    const client = new Client(MY_SERVER)
-    await client.connect()
-    ```
-
-    See the example {% source-link name="core server config file" path="cfg/xrpld-example.cfg#L1469" /%} for more information about default values.
-
-- By using one of the available [public servers][]:
-
-    ```typescript
-    const PUBLIC_SERVER = 'wss://xrplcluster.com/'
-    const client = new Client(PUBLIC_SERVER)
-    await client.connect()
-    ```
-{% /step %}
-
-### 4. Get Account
 
 {% step id="get-account-create-wallet-tag" %}
-#### Create and Fund a Wallet
+### 4. Create Two Test Wallets
 
-The `xrpl.js` library has a [`Wallet`](https://js.xrpl.org/classes/Wallet.html) class for handling the keys and address of an XRP Ledger account. On Testnet, you can fund a new account as shown in the example. The returned wallet already has the `Wallet` type: no annotation is needed. Type `testWallet.` to discover its properties and methods in your editor.
-{% /step %}
-
-{% step id="get-account-create-wallet-b-tag" %}
-#### (Optional) Generate a Wallet Only
-
-If you want to generate a wallet without funding it, you can create a new [`Wallet`](https://js.xrpl.org/classes/Wallet.html) instance. Keep in mind that you need to send XRP to the wallet for it to be a valid account on the ledger.
-{% /step %}
-
-{% step id="get-account-create-wallet-c-tag" %}
-#### (Optional) Use Your Own Wallet Seed
-
-To use an existing wallet seed encoded in [base58][], you can create a [`Wallet`](https://js.xrpl.org/classes/Wallet.html) instance from it.
+`fundWallet()` creates a wallet and funds it with test XRP. Create one for the sender and one for the recipient. Type `testWallet.` in your editor to explore the wallet's address and methods.
 {% /step %}
 
 {% step id="query-xrpl-tag" %}
 ### 5. Query the XRP Ledger
 
-Use the Client's [`request()`](https://js.xrpl.org/classes/Client.html#request) method to access the XRP Ledger's [WebSocket API](../../references/http-websocket-apis/api-conventions/request-formatting.md). Use `satisfies AccountInfoRequest` to check the request while preserving its literal command. The library infers `AccountInfoResponse` from that command. Type `response.result.account_data.` to discover the available account fields without importing a response type.
+Ask for `account_info` directly inside `client.request()`. The `command` tells the library which request and response you mean; you don't need to import either type.
+
+Try typing `response.result.account_data.` to explore the account fields. This example prints the account sequence.
 {% /step %}
 
 {% step id="build-tx-tag" %}
-### 6. Build and Validate a Transaction
+### 6. Send 1 Test XRP
 
-Use `satisfies Payment` to receive field completion and check required fields and known field types in an object literal. The published 5.3.0 transaction model still accepts additional field names, so this alone does not reject every typo. It preserves the literal transaction kind and keeps the value compatible with `validate()` without an assertion. [`xrpToDrops()`](https://js.xrpl.org/functions/xrpToDrops.html) converts XRP to drops. [`validate()`](https://js.xrpl.org/functions/validate.html) checks supported local constraints; it cannot determine ledger state or guarantee that a transaction will succeed.
+Pass the transaction directly to `submitAndWait()`. Once you enter `TransactionType: 'Payment'`, your editor offers Payment fields such as `Amount` and `Destination`. [`xrpToDrops()`](https://js.xrpl.org/functions/xrpToDrops.html) converts 1 XRP into the unit the ledger expects.
 
-This example then signs and submits the transaction in one call with [`submitAndWait()`](https://js.xrpl.org/classes/Client.html#submitAndWait), which waits for validated inclusion and returns the result. The example uses a second freshly funded wallet as the destination and checks `TransactionResult` before reporting success. A validated transaction can still have failed. Before submitting real transactions, read [Set up Secure Signing](../../concepts/transactions/secure-signing.md).
+The SDK fills the fee and sequence, validates while signing, submits the payment, and waits for a validated ledger. Read `submitted.result.meta.TransactionResult` directly. If it is `tesSUCCESS`, print the payment hash; otherwise, report the failed result. Ledger inclusion and payment success are different outcomes.
+
+There is no separate transaction annotation, type assertion, or metadata-format check to learn.
 {% /step %}
 
 {% step id="listen-for-events-tag" %}
 ### 7. Listen for Events
 
-You can set up handlers for various types of events in `xrpl.js`, such as whenever the XRP Ledger's [consensus process](../../concepts/consensus-protocol/index.md) produces a new [ledger version](../../concepts/ledgers/index.md). To do that, first attach an event handler using the [`on(eventType, callback)`](https://js.xrpl.org/classes/Client.html#on) method of the client, then await the [subscribe method][] so subscription errors are handled. The callback's `ledger` argument is typed for you, so fields like `ledger_index` and `txn_count` are checked as you use them.
+Listen for `ledgerClosed`, then subscribe to the ledger stream. The callback's `ledger` value is typed automatically. Explore its fields in your editor while the example prints new ledger numbers for ten seconds.
 {% /step %}
 
 {% step id="disconnect-node-tag" when={ "environment": "Node" } %}
@@ -221,7 +159,7 @@ npm run build
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000/index.html`. The import map pins the same xrpl version used during compilation. Rebuild after changing the TypeScript files. The page displays account, payment, and ledger-event results, or the error that stopped the run.
+Open `http://localhost:8000/index.html`. The page loads the same local SDK build used during compilation. Rebuild after changing the TypeScript files. The page displays account, payment, and ledger-event results, or the error that stopped the run.
 {% /step %}
 
 ## See Also

@@ -1,6 +1,8 @@
 import { pathToFileURL } from 'node:url'
 // @chunk {"steps": ["import-node-tag"]}
-import { Client, Wallet, xrpToDrops } from 'xrpl'
+// Runtime functions and type-only imports appear separately in the editor.
+import { Client, Wallet, xrpToDrops, validate } from 'xrpl'
+import type { AccountInfoRequest, Payment } from 'xrpl'
 // @chunk-end
 
 const log = console.log
@@ -12,30 +14,43 @@ export async function run(
   listenMilliseconds = 10_000
 ): Promise<void> {
   // @chunk {"steps": ["query-xrpl-tag"]}
-  const response = await client.request({
+  // `satisfies` checks fields while preserving command: 'account_info'.
+  const request = {
     command: 'account_info',
     account: testWallet.address,
     ledger_index: 'validated'
-  })
+  } satisfies AccountInfoRequest
+  // No response annotation: the command selects AccountInfoResponse for you.
+  const response = await client.request(request)
   log(`Account sequence: ${response.result.account_data.Sequence}`)
   // @chunk-end
 
   // @chunk {"steps": ["build-tx-tag"]}
-  const submitted = await client.submitAndWait({
+  // Use our own funded destination rather than an external example address.
+  const payment = {
     TransactionType: 'Payment',
     Account: testWallet.address,
     Amount: xrpToDrops('1'),
     Destination: destination.address
-  }, { wallet: testWallet })
+  } satisfies Payment
 
-  const result = submitted.result.meta.TransactionResult
-  if (result !== 'tesSUCCESS') {
-    throw new Error(`Payment failed: ${result}`)
+  // Checks supported local constraints; ledger state still determines success.
+  // `satisfies` keeps the object compatible with validate(), without a cast.
+  validate(payment)
+  const submitted = await client.submitAndWait(payment, { wallet: testWallet })
+  // A validated transaction can still fail. Check its result before continuing.
+  const metadata = submitted.result.meta
+  if (metadata == null || typeof metadata === 'string') {
+    throw new Error('Expected parsed transaction metadata')
+  }
+  if (metadata.TransactionResult !== 'tesSUCCESS') {
+    throw new Error(`Payment failed: ${metadata.TransactionResult}`)
   }
   log(`Payment confirmed: ${submitted.result.hash}`)
   // @chunk-end
 
   // @chunk {"steps": ["listen-for-events-tag"]}
+  // Register before subscribing; await the subscription so errors propagate.
   client.on('ledgerClosed', (ledger) => {
     log(`Ledger #${ledger.ledger_index}: ${ledger.txn_count} transactions`)
   })
@@ -53,12 +68,20 @@ async function main(): Promise<void> {
     log('Connected to Testnet')
     // @chunk-end
     // @chunk {"steps": ["get-account-create-wallet-tag"]}
+    // The wallet type is inferred: type testWallet. to explore its fields.
     const { wallet: testWallet } = await client.fundWallet()
-    const { wallet: destination } = await client.fundWallet()
     // @chunk-end
+    // @chunk {"steps": ["get-account-create-wallet-b-tag"]}
+    // const testWallet = Wallet.generate()
+    // @chunk-end
+    // @chunk {"steps": ["get-account-create-wallet-c-tag"]}
+    // const testWallet = Wallet.fromSeed('your-seed-key')
+    // @chunk-end
+    const { wallet: destination } = await client.fundWallet()
     await run(client, testWallet, destination)
   } finally {
     // @chunk {"steps": ["disconnect-node-tag"]}
+    // Always release the connection, including when a request fails.
     await client.disconnect()
     // @chunk-end
   }
