@@ -1,0 +1,55 @@
+name: DevX before and after preview
+
+on:
+  push:
+    branches: [aha/devx-audit-2026-09]
+    paths:
+      - scripts/devx-preview/**
+      - _code-samples/**
+      - docs/tutorials/**
+      - .github/workflows/devx-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aha-devx-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.repository == 'theahaco/xrpl-dev-portal' && github.ref == 'refs/heads/aha/devx-audit-2026-09'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Build source-backed comparisons
+        run: node scripts/devx-preview/build.mjs
+      - name: Check the preview
+        run: node scripts/devx-preview/check.mjs
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: out/devx-preview
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}pr-1/
+    steps:
+      - name: Publish the comparison
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Link the preview in the run summary
+        env:
+          PREVIEW_URL: ${{ steps.deployment.outputs.page_url }}pr-1/
+        run: echo "[Open the before and after preview]($PREVIEW_URL)" >> "$GITHUB_STEP_SUMMARY"

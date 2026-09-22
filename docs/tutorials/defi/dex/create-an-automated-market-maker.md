@@ -37,6 +37,14 @@ Complete sample code for all of the steps of these tutorials is available under 
 - See [Code Samples: Create an AMM](https://github.com/XRPLF/xrpl-dev-portal/tree/master/_code-samples/create-amm/) in the source repository for this website.
 
 
+## TypeScript walkthrough
+
+The [guided TypeScript sample](https://github.com/theahaco/xrpl-dev-portal/tree/aha/devx-audit-2026-09/_code-samples/create-amm/ts) uses published `xrpl` **5.3.0**. It creates its own Devnet issuer and token supply, then creates and queries a FOO/XRP pool. With Node.js 22 or later, run `npm install`, `npm run typecheck`, then `npm start` from that directory.
+
+The sample checks each setup transaction before proceeding. It fetches the current AMM creation cost, uses the SDK's `Amount` union to distinguish XRP from issued tokens, and infers query responses from request commands. The older advanced AMM example remains available separately; the guided sample is the recommended TypeScript starting point.
+
+{% code-snippet file="/_code-samples/create-amm/ts/create-amm-guided.ts" language="ts" /%}
+
 ## Steps
 
 ### 1. Connect to the network

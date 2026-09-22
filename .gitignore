@@ -23,3 +23,6 @@ tools/broken-links-report.md
 # PHP
 composer.lock
 .cursor/
+# Retained release comparison builds
+_code-samples/devx-before/*/dist/
+_code-samples/devx-before/*/package-lock.json

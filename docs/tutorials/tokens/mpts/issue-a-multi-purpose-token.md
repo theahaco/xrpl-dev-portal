@@ -37,6 +37,14 @@ To complete this tutorial, you should:
 
 You can find the complete source code for this tutorial's example in the [code samples section of this website's repository](https://github.com/XRPLF/xrpl-dev-portal/tree/master/_code-samples/issue-mpt-with-metadata).
 
+## TypeScript walkthrough
+
+The [TypeScript sample](https://github.com/theahaco/xrpl-dev-portal/tree/aha/devx-audit-2026-09/_code-samples/issue-mpt-with-metadata/ts) follows the same issuance, lookup, update, and confirmation journey using `xrpl` **5.3.0**. From its directory, run `npm install`, `npm run typecheck`, then `npm start` with Node.js 22 or later. It uses a fresh Devnet account and requires the MPT amendments used below.
+
+Use `satisfies MPTokenMetadata` and `satisfies MPTokenIssuanceCreate` for inline field guidance. The current SDK requires checks for parsed transaction metadata, a returned issuance ID, and the ledger-entry kind. These checks preserve runtime correctness without assertions. The update makes metadata immutable, so further metadata updates to that issuance are intentionally rejected.
+
+{% code-snippet file="/_code-samples/issue-mpt-with-metadata/ts/issue-mpt-with-metadata.ts" language="ts" /%}
+
 ## Steps
 
 The example in this tutorial demonstrates how to issue a sample [US Treasury bill (T-bill)](https://www.treasurydirect.gov/research-center/history-of-marketable-securities/bills/t-bills-indepth/) as an MPT on the XRP Ledger.

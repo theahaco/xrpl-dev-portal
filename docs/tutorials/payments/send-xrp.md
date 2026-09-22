@@ -30,6 +30,14 @@ To interact with the XRP Ledger, you need to set up a dev environment with the n
 - **PHP** with the [XRPL_PHP library](https://github.com/AlexanderBuzz/xrpl-php). See [Get Started Using PHP](../get-started/get-started-php.md) for setup steps.
 - **Go** with the [xrpl-go library](https://github.com/Peersyst/xrpl-go). See [Get Started Using Go](../get-started/get-started-go.md) for setup steps.
 
+## TypeScript walkthrough
+
+The [TypeScript sample](https://github.com/theahaco/xrpl-dev-portal/tree/aha/devx-audit-2026-09/_code-samples/send-xrp/ts) uses `xrpl` **5.3.0** and two fresh Testnet accounts. With Node.js 22 or later, run `npm install`, `npm run typecheck`, then `npm start` from that sample directory.
+
+`satisfies Payment` guides construction. Pass the object returned by `autofill()` to `sign()`; `autofill()` does not modify your input. In the current SDK, the explicit `<Payment>` argument exposes the optional populated fields in the editor. Check the result code after `submitAndWait()` before calling the payment successful.
+
+{% code-snippet file="/_code-samples/send-xrp/ts/send-xrp.ts" language="ts" /%}
+
 ## Send a Payment on the Test Net
 
 ### 1. Get Credentials

@@ -1,132 +1,46 @@
-# Get Started Using TypeScript Library
+# Send your first test XRP with TypeScript
 
-Connects to the XRP Ledger, gets account information, builds and validates a typed transaction, and subscribes to ledger events using TypeScript and `xrpl.js`.
+Connect, create two test wallets, look up an account, and send 1 test XRP. Let your editor guide the transaction fields and returned data. The SDK checks payment success, and the example closes the connection when finished.
 
-To download the source code, see the [Get Started Using TypeScript tutorial](https://xrpl.org/docs/tutorials/get-started/get-started-typescript) on xrpl.org.
+**aha preview:** this walkthrough uses the unreleased DevX SDK fork. The [published 5.3.0 comparison](../../devx-before/get-started/README.md) is retained separately.
 
-## Setup
+## Set up the preview
 
-Install the runtime and development dependencies (`xrpl`, `typescript`, and `@types/node`):
+Use Node.js 22 or later. Check out `aha/devx-audit-2026-09` in both aha forks and arrange `xrpl.js` and `xrpl-dev-portal` as siblings. From the SDK repository:
 
 ```sh
 npm install
+npm run build
 ```
 
-## Run the Code
-
-**Node.js**
-
-Compile the TypeScript to JavaScript, then run it:
+Then, from this example directory:
 
 ```sh
-npx tsc
-node ./dist/get-acct-info.js
+npm install
+npm run typecheck
+npm start
 ```
 
-You should see output similar to the following:
+The script prints an account sequence, a confirmed payment hash, and ledger events. It uses Testnet and fresh faucet-funded wallets; Testnet XRP has no monetary value.
+
+## Follow the editor
+
+- `new WalletClient(server, { wallet })` binds the signing wallet once.
+- Type `client.command.` to discover requests such as `accountInfo`, with inferred responses.
+- Type `client.tx.` to discover transactions such as `payment`, with documented fields. `Account` defaults to the wallet; the factory supplies `TransactionType`.
+- `.signAndSubmit()` prepares, signs, submits, and waits for validated success. It throws on failure; no protocol result-code strings or metadata-format guards are needed.
+- `.trySignAndSubmit()` returns an explicit `{ ok, response/error }` result. The lower-level equivalents are `submitAndWait()` and `trySubmitAndWait()`.
+- Creating a builder sends nothing. Call `.toJSON()` to inspect the draft or `.signAndSubmit()` to send it. Handle an unknown network outcome by checking the transaction before retrying.
+
+This preview changes the failure behavior of `submitAndWait`: existing applications that inspect unsuccessful validated responses must migrate to the `try` result or catch `TransactionFailedError`, whose `response` preserves the validated transaction.
+
+## Run in a browser
+
+After building the SDK and installing the example as above:
 
 ```sh
-Connected to Testnet
-
-Creating a new wallet and funding it with Testnet XRP...
-Wallet: rMnXR9p2sZT9iZ6ew3iEqvBMyPts1ADc4i
-Balance: 100
-Account Testnet Explorer URL:
-  https://testnet.xrpl.org/accounts/rMnXR9p2sZT9iZ6ew3iEqvBMyPts1ADc4i
-
-Getting account info...
-{
-  "api_version": 2,
-  "id": 4,
-  "result": {
-    "account_data": {
-      "Account": "rMnXR9p2sZT9iZ6ew3iEqvBMyPts1ADc4i",
-      "Balance": "10000000",
-      "Flags": 0,
-      "LedgerEntryType": "AccountRoot",
-      "OwnerCount": 0,
-      "PreviousTxnID": "0FF9DB2FE141DD0DF82566A171B6AF70BB2C6EB6A53D496E65D42FC062C91A78",
-      "PreviousTxnLgrSeq": 9949268,
-      "Sequence": 9949268,
-      "index": "4A9C9220AE778DC38C004B2B17A08E218416D90E01456AFCF844C18838B36D01"
-    },
-    "ledger_hash": "304C7CC2A33B712BE43EB398B399E290C191A71FCB71784F584544DFB7C441B0",
-    "ledger_index": 9949268,
-    "validated": true
-  },
-  "type": "response"
-}
-
-Built and validated a Payment transaction:
-{
-  "TransactionType": "Payment",
-  "Account": "rMnXR9p2sZT9iZ6ew3iEqvBMyPts1ADc4i",
-  "Amount": "22000000",
-  "Destination": "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
-}
-
-Submitted the transaction:
-{
-  "hash": "84AF8035CD41B0E411968FC9BDD52254C662197DB2BE669640F6DF25D79A7E0A",
-  "ledger_index": 19257811,
-  "meta": {
-    "TransactionResult": "tesSUCCESS",
-    "delivered_amount": "22000000"
-  },
-  "validated": true
-}
-
-Listening for ledger close events...
-Ledger #9949269 validated with 0 transactions!
-Ledger #9949270 validated with 0 transactions!
-Ledger #9949271 validated with 0 transactions!
-
-Disconnected
+npm run build
+python3 -m http.server 8000
 ```
 
-**Web**
-
-Compile the TypeScript, then open `index.html` in a web browser and wait for the results to appear on the page:
-
-```sh
-npx tsc
-```
-
-The page loads `xrpl.js` through an import map and runs the compiled `dist/browser.js`. You should see output similar to the following:
-
-```text
-Connected to Testnet
-Creating a new wallet and funding it with Testnet XRP...
-Wallet: rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S
-Balance: 100
-View account on XRPL Testnet Explorer: rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S
-
-Getting account info...
-{ ...account_info response... }
-
-Built and validated a Payment transaction:
-{
-  "TransactionType": "Payment",
-  "Account": "rf7CWJdNssSzQk2GtypYLVhyvGe8oHS3S",
-  "Amount": "22000000",
-  "Destination": "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
-}
-
-Submitted the transaction:
-{
-  "hash": "84AF8035CD41B0E411968FC9BDD52254C662197DB2BE669640F6DF25D79A7E0A",
-  "ledger_index": 19257811,
-  "meta": {
-    "TransactionResult": "tesSUCCESS",
-    "delivered_amount": "22000000"
-  },
-  "validated": true
-}
-
-Listening for ledger close events...
-Ledger #9949611 validated with 0 transactions
-Ledger #9949612 validated with 1 transactions
-Ledger #9949613 validated with 0 transactions
-
-Disconnected
-```
+Open `http://localhost:8000/index.html`. The page uses the local prototype browser bundle and the same SDK declarations as Node. The small import-map adapter is included in this directory; it requires no application type assertions.

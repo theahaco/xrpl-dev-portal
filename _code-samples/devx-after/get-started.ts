@@ -1,3 +1,4 @@
+// PROTOTYPE: requires the built aha DevX SDK fork; not published xrpl 5.3.0.
 import { pathToFileURL } from 'node:url'
 // @chunk {"steps": ["import-node-tag"]}
 import { WalletClient, Wallet, xrpToDrops } from 'xrpl'

@@ -1,8 +1,8 @@
 {
   "name": "get-started-typescript",
-  "description": "Proposed Getting Started experience using the aha DevX SDK fork",
+  "description": "Example code for the Get Started Using TypeScript tutorial.",
   "dependencies": {
-    "xrpl": "file:../../../../xrpl.js/packages/xrpl"
+    "xrpl": "5.3.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",

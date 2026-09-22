@@ -1,10 +1,14 @@
 {
-  "name": "scripts",
+  "name": "create-amm-typescript",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "create-amm": "ts-node create-amm.ts"
+    "typecheck": "tsc --noEmit --project tsconfig.guided.json",
+    "build": "tsc --project tsconfig.guided.json",
+    "start": "npm run build && node dist/create-amm-guided.js",
+    "create-amm": "npm start",
+    "create-amm-legacy": "ts-node create-amm.ts"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +17,8 @@
     "@types/node": "^20.8.10",
     "dotenv": "^16.3.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2",
-    "xrpl": "^4.0.0"
-  }
+    "typescript": "5.9.3",
+    "xrpl": "5.3.0"
+  },
+  "private": true
 }

@@ -3,12 +3,22 @@
     "target": "ES2020",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "xrpl": [
+        "../../../../xrpl.js/packages/xrpl/dist/npm/index.d.ts"
+      ]
+    }
   },
-  "include": ["*.ts"]
+  "include": [
+    "*.ts"
+  ]
 }
