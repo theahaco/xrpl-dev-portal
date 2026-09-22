@@ -1,6 +1,6 @@
 # DevX before and after preview
 
-A standalone GitHub Pages comparison for the aha audit. It displays the actual before/after TypeScript example files with guided excerpts, source links, copy buttons, downloads and optional changed-line highlighting. It does not execute transaction code or reproduce the full Realm portal.
+A standalone GitHub Pages comparison for the aha audit. It displays the actual before/after TypeScript example files with guided excerpts, source links, copy buttons, downloads and changed-line highlighting enabled by default. The highlight button can turn it off. It does not execute transaction code or reproduce the full Realm portal.
 
 ## Build locally
 
