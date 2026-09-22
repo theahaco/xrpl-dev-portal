@@ -1,6 +1,6 @@
 # Send your first test XRP with TypeScript
 
-Connect, create two test wallets, look up an account, and send 1 test XRP. Let your editor guide the transaction fields and returned data. The example checks the payment result and closes the connection when finished.
+Connect, create two test wallets, look up an account, and send 1 test XRP. Let your editor guide the transaction fields and returned data. The SDK checks payment success, and the example closes the connection when finished.
 
 **aha preview:** this walkthrough uses the unreleased DevX SDK fork. The [published 5.3.0 comparison](../../devx-before/get-started/README.md) is retained separately.
 
@@ -25,10 +25,14 @@ The script prints an account sequence, a confirmed payment hash, and ledger even
 
 ## Follow the editor
 
-- Inside `client.request`, `command: 'account_info'` selects the request fields and account response.
-- Inside `client.submitAndWait`, `TransactionType: 'Payment'` selects Payment fields. No `Payment` import, annotation, generic, `satisfies`, or cast is needed.
-- `submitAndWait` prepares, validates during signing, signs, submits, and waits for validated inclusion. The SDK guarantees parsed metadata, so the example reads `TransactionResult` directly.
-- A transaction can be included in a validated ledger and still fail. The result check handles that outcome.
+- `new WalletClient(server, { wallet })` binds the signing wallet once.
+- Type `client.command.` to discover requests such as `accountInfo`, with inferred responses.
+- Type `client.tx.` to discover transactions such as `payment`, with documented fields. `Account` defaults to the wallet; the factory supplies `TransactionType`.
+- `.signAndSubmit()` prepares, signs, submits, and waits for validated success. It throws on failure; no protocol result-code strings or metadata-format guards are needed.
+- `.trySignAndSubmit()` returns an explicit `{ ok, response/error }` result. The lower-level equivalents are `submitAndWait()` and `trySubmitAndWait()`.
+- Creating a builder sends nothing. Call `.toJSON()` to inspect the draft or `.signAndSubmit()` to send it. Handle an unknown network outcome by checking the transaction before retrying.
+
+This preview changes the failure behavior of `submitAndWait`: existing applications that inspect unsuccessful validated responses must migrate to the `try` result or catch `TransactionFailedError`, whose `response` preserves the validated transaction.
 
 ## Run in a browser
 

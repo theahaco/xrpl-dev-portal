@@ -1,5 +1,5 @@
 // @chunk {"steps": ["import-web-tag"]}
-import { Client, xrpToDrops } from 'xrpl'
+import { WalletClient, Wallet, xrpToDrops } from 'xrpl'
 // @chunk-end
 
 const output = document.getElementById('output')
@@ -10,41 +10,36 @@ const log = (message: string) => {
   output.append(line)
 }
 
-const client = new Client('wss://s.altnet.rippletest.net:51233/')
+// @chunk {"steps": ["connect-tag"]}
+const client = new WalletClient('wss://s.altnet.rippletest.net:51233/', {
+  wallet: Wallet.generate()
+})
 try {
-  // @chunk {"steps": ["connect-tag"]}
   await client.connect()
   log('Connected to Testnet')
   // @chunk-end
 
   // @chunk {"steps": ["get-account-create-wallet-tag"]}
-  const { wallet: testWallet } = await client.fundWallet()
+  await client.fundWallet(client.wallet)
   const { wallet: destination } = await client.fundWallet()
-  log(`Wallet: ${testWallet.address}`)
+  log(`Wallet: ${client.wallet.address}`)
   // @chunk-end
 
 
   // @chunk {"steps": ["query-xrpl-tag"]}
-  const response = await client.request({
-    command: 'account_info',
-    account: testWallet.address,
+  const response = await client.command.accountInfo({
+    account: client.wallet.address,
     ledger_index: 'validated'
   })
   log(`Account sequence: ${response.result.account_data.Sequence}`)
   // @chunk-end
 
   // @chunk {"steps": ["build-tx-tag"]}
-  const submitted = await client.submitAndWait({
-    TransactionType: 'Payment',
-    Account: testWallet.address,
+  const submitted = await client.tx.payment({
     Amount: xrpToDrops('1'),
     Destination: destination.address
-  }, { wallet: testWallet })
+  }).signAndSubmit()
 
-  const result = submitted.result.meta.TransactionResult
-  if (result !== 'tesSUCCESS') {
-    throw new Error(`Payment failed: ${result}`)
-  }
   log(`Payment confirmed: ${submitted.result.hash}`)
   // @chunk-end
 
@@ -52,7 +47,7 @@ try {
   client.on('ledgerClosed', (ledger) => {
     log(`Ledger #${ledger.ledger_index}: ${ledger.txn_count} transactions`)
   })
-  await client.request({ command: 'subscribe', streams: ['ledger'] })
+  await client.command.subscribe({ streams: ['ledger'] })
   await new Promise<void>((resolve) => setTimeout(resolve, 10_000))
   // @chunk-end
 } catch (error) {

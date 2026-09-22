@@ -1,15 +1,7 @@
 import { pathToFileURL } from 'node:url'
 // PROTOTYPE: requires the built aha DevX SDK fork; not published xrpl 5.3.0.
 import { AccountSetAsfFlags, Client, dropsToXrp, xrpToDrops } from 'xrpl'
-import type { AccountSet, AMMCreate, AMMInfoRequest, Amount, Payment, TrustSet, ValidatedTxResponse, Wallet } from 'xrpl'
-
-// Every transaction has its own checked result. Validation can include failures.
-function requireSuccess(response: ValidatedTxResponse): void {
-  const metadata = response.result.meta
-  if (metadata.TransactionResult !== 'tesSUCCESS') {
-    throw new Error(`Transaction ${response.result.hash} failed: ${metadata.TransactionResult}`)
-  }
-}
+import type { AccountSet, AMMCreate, AMMInfoRequest, Amount, Payment, TrustSet, Wallet } from 'xrpl'
 
 function describeAmount(amount: Amount): string {
   return typeof amount === 'string'
@@ -26,7 +18,7 @@ export async function run(client: Client, issuer: Wallet, provider: Wallet): Pro
     Account: issuer.address,
     SetFlag: AccountSetAsfFlags.asfDefaultRipple
   } satisfies AccountSet
-  requireSuccess(await client.submitAndWait(configureIssuer, { wallet: issuer }))
+  await client.submitAndWait(configureIssuer, { wallet: issuer })
 
   // Give the provider a trust line, then issue enough FOO for the deposit.
   const trust = {
@@ -34,14 +26,14 @@ export async function run(client: Client, issuer: Wallet, provider: Wallet): Pro
     Account: provider.address,
     LimitAmount: { ...asset, value: '1000' }
   } satisfies TrustSet
-  requireSuccess(await client.submitAndWait(trust, { wallet: provider }))
+  await client.submitAndWait(trust, { wallet: provider })
   const issue = {
     TransactionType: 'Payment',
     Account: issuer.address,
     Destination: provider.address,
     Amount: { ...asset, value: '1000' }
   } satisfies Payment
-  requireSuccess(await client.submitAndWait(issue, { wallet: issuer }))
+  await client.submitAndWait(issue, { wallet: issuer })
 
   // AMMCreate burns the current owner reserve, rather than the ordinary fee.
   const server = await client.request({ command: 'server_state' })
@@ -58,7 +50,6 @@ export async function run(client: Client, issuer: Wallet, provider: Wallet): Pro
     Fee: String(ledger.reserve_inc)
   } satisfies AMMCreate
   const created = await client.submitAndWait(create, { wallet: provider })
-  requireSuccess(created)
   console.log(`AMM created: https://devnet.xrpl.org/transactions/${created.result.hash}`)
 
   // Query the AMM: the request command infers its response shape.

@@ -22,10 +22,6 @@ export async function run(client: Client, sender: Wallet, receiver: Wallet): Pro
   // Submit the signed blob and wait for a validated ledger result.
   // The signed blob preserves Payment for the submitAndWait response.
   const confirmed = await client.submitAndWait(signed.tx_blob)
-  const metadata = confirmed.result.meta
-  if (metadata.TransactionResult !== 'tesSUCCESS') {
-    throw new Error(`Payment failed: ${metadata.TransactionResult}`)
-  }
   console.log(`Payment confirmed: ${confirmed.result.hash}`)
   console.log(`Confirmed destination: ${confirmed.result.tx_json.Destination}`)
   console.log(`Receiver balance: ${await client.getXrpBalance(receiver.address)} XRP`)

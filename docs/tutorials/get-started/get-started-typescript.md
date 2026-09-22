@@ -75,7 +75,7 @@ Install the example's SDK dependency and TypeScript compiler:
 npm install
 ```
 
-Import `Client` and `xrpToDrops` as shown in the source panel. The supplied package points to the sibling SDK checkout for this preview.
+Import `WalletClient`, `Wallet`, and `xrpToDrops` as shown in the source panel. The supplied package points to the sibling SDK checkout for this preview.
 {% /step %}
 
 {% step id="configure-ts-tag" %}
@@ -89,19 +89,19 @@ Add a `tsconfig.json` file to tell the compiler how to build your project. The s
 {% step id="connect-tag" %}
 ### 3. Connect to Testnet
 
-Create a `Client` and call `connect()`. Use `await` to wait for the connection before querying or sending a payment. The example closes the connection in `finally`, including when an operation fails.
+Create a `WalletClient` with `Wallet.generate()` as its signing wallet, then call `connect()`. The client now knows which account will send your transactions. The example closes the connection in `finally`, including when an operation fails.
 {% /step %}
 
 {% step id="get-account-create-wallet-tag" %}
 ### 4. Create Two Test Wallets
 
-`fundWallet()` creates a wallet and funds it with test XRP. Create one for the sender and one for the recipient. Type `testWallet.` in your editor to explore the wallet's address and methods.
+`fundWallet(client.wallet)` funds your signing wallet with test XRP. Call `fundWallet()` again to create and fund a recipient. Type `client.wallet.` in your editor to explore your wallet's address and methods.
 {% /step %}
 
 {% step id="query-xrpl-tag" %}
 ### 5. Query the XRP Ledger
 
-Ask for `account_info` directly inside `client.request()`. The `command` tells the library which request and response you mean; you don't need to import either type.
+Type `client.command.` to discover available requests, then choose `accountInfo`. Your editor guides the request fields and infers the response.
 
 Try typing `response.result.account_data.` to explore the account fields. This example prints the account sequence.
 {% /step %}
@@ -109,11 +109,12 @@ Try typing `response.result.account_data.` to explore the account fields. This e
 {% step id="build-tx-tag" %}
 ### 6. Send 1 Test XRP
 
-Pass the transaction directly to `submitAndWait()`. Once you enter `TransactionType: 'Payment'`, your editor offers Payment fields such as `Amount` and `Destination`. [`xrpToDrops()`](https://js.xrpl.org/functions/xrpToDrops.html) converts 1 XRP into the unit the ledger expects.
+Type `client.tx.` to discover the available transactions, then choose `payment`. Your editor offers Payment fields such as `Amount` and `Destination`. The client supplies the transaction type and your wallet's account. [`xrpToDrops()`](https://js.xrpl.org/functions/xrpToDrops.html) converts 1 XRP into the unit the ledger expects.
 
-The SDK fills the fee and sequence, validates while signing, submits the payment, and waits for a validated ledger. Read `submitted.result.meta.TransactionResult` directly. If it is `tesSUCCESS`, print the payment hash; otherwise, report the failed result. Ledger inclusion and payment success are different outcomes.
+Call `.signAndSubmit()` to fill the fee and sequence, sign with your wallet, send the payment, and wait for confirmed success. If the transaction fails, the SDK throws an error that the example's error handler reports. Print the payment hash when the call returns.
 
-There is no separate transaction annotation, type assertion, or metadata-format check to learn.
+Creating a draft sends nothing. You can inspect it with `.toJSON()` before submitting. For applications that prefer handling an explicit outcome, `.trySignAndSubmit()` returns `{ ok: true, response }` or `{ ok: false, error }`. The lower-level `submitAndWait()` and `trySubmitAndWait()` follow the same success/error contract.
+
 {% /step %}
 
 {% step id="listen-for-events-tag" %}

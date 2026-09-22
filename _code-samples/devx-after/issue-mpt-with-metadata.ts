@@ -42,9 +42,6 @@ export async function run(client: Client, issuer: Wallet): Promise<void> {
   // Submit and check the result
   const created = await client.submitAndWait(issuance, { wallet: issuer })
   const creationMetadata = created.result.meta
-  if (creationMetadata.TransactionResult !== 'tesSUCCESS') {
-    throw new Error(`Issuance failed: ${creationMetadata.TransactionResult}`)
-  }
   // A typed object already infers issuance metadata; the ID remains optional.
   if (creationMetadata.mpt_issuance_id == null) {
     throw new Error('Successful issuance did not return an MPT issuance ID')
@@ -80,11 +77,7 @@ export async function run(client: Client, issuer: Wallet): Promise<void> {
     // Replaces metadata first, then permanently prevents later metadata edits.
     ImmutableFlags: MPTokenIssuanceCreateImmutableFlags.tifMPTMetadata
   } satisfies MPTokenIssuanceSet
-  const updated = await client.submitAndWait(update, { wallet: issuer })
-  const updateMetadata = updated.result.meta
-  if (updateMetadata.TransactionResult !== 'tesSUCCESS') {
-    throw new Error(`Update failed: ${updateMetadata.TransactionResult}`)
-  }
+  await client.submitAndWait(update, { wallet: issuer })
 
   // Confirm the update
   const confirmation = await client.request({

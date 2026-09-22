@@ -34,13 +34,13 @@ Each command uses fresh faucet-funded accounts; Get Started/Send XRP use Testnet
 
 | Journey | Current-release source | Proposed behavior |
 |---|---|---|
-| Get Started | `../devx-before/get-started/get-acct-info.ts` | Inline discriminants guide fields and inference; `submitAndWait` guarantees parsed metadata. |
+| Get Started | `../devx-before/get-started/get-acct-info.ts` | Wallet-bound `tx.payment().signAndSubmit()` and `command.accountInfo()` guide discovery and return successful, typed results. |
 | Send XRP | `../send-xrp/ts/send-xrp.ts` | `autofill(payment)` exposes populated fields without a generic; the signed blob preserves Payment into the response. |
 | MPT | `../issue-mpt-with-metadata/ts/issue-mpt-with-metadata.ts` | The MPT selector narrows the ledger-entry type; parsed metadata is guaranteed after validated inclusion. |
-| AMM | `../create-amm/ts/create-amm-guided.ts` | A `ValidatedTxResponse` helper accesses parsed metadata directly and still checks each transaction result. |
+| AMM | `../create-amm/ts/create-amm-guided.ts` | `submitAndWait` checks every transaction result inside the SDK. |
 
-All four examples retain checks for transaction success. The MPT example retains the possibly absent creation ID and optional ledger metadata checks. The AMM example retains the unavailable validated-ledger check. Request failures still propagate to an entrypoint that disconnects in `finally` and reports a failing exit status.
+The prototype SDK now checks transaction success for all four examples and throws on unsuccessful validated transactions. Use `trySubmitAndWait` for an explicit success/error result. This is a proposed breaking change from published 5.3.0. The MPT example retains the possibly absent creation ID and optional ledger metadata checks. The AMM example retains the unavailable validated-ledger check. Request failures still propagate to an entrypoint that disconnects in `finally` and reports a failing exit status.
 
 ## Isolated-ledger verification
 
-Each module exports `run()` and can be imported without starting a network request. A caller can supply its own connected client and funded wallets; that caller owns connection cleanup. Get Started also accepts an optional event-listening duration, allowing zero in an integration harness. This keeps local test funding details out of the public workflow.
+Each module exports `run()` and can be imported without starting a network request. A caller can supply its own connected client and funded wallets; that caller owns connection cleanup. Get Started takes a `WalletClient`, a recipient wallet, and an optional event-listening duration, allowing zero in an integration harness. This keeps local test funding details out of the public workflow.
