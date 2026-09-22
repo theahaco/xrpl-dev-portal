@@ -59,6 +59,6 @@ for(const journey of manifest.journeys){
     assert(!/satisfies|tesSUCCESS|typeof|TransactionType:|Account:/.test(after))
     assert.match(code(html,'query-after'),/client\.command\.accountInfo/)
   }
-  if(journey.id==='send-xrp')assert(code(html,'prepare-before').includes('autofill<Payment>'),'HTML must preserve the generic, not interpret it as a tag')
+  if(journey.id==='send-xrp')assert(code(html,'confirm-before').includes('autofill<Payment>'),'HTML must preserve the generic, not interpret it as a tag')
 }
 console.log(`Verified ${manifest.journeys.length} journeys, ${copies} code/copy pairs, exact downloads and ${relativeLinks} relative links`)
